@@ -2,6 +2,7 @@
 var connectDevice = null;
 var synth;
 var bleDevice;
+var bluetoothDevice;
 
 /** Function to run upon window load. */
 window.onload=function(){
@@ -39,6 +40,7 @@ function rxConnect() {
     printToConsole('Connecting to bluetooth device '+ device.name + '...');
     device.addEventListener('gattserverdisconnected', onDisconnected);
     bleConnected();
+    bluetoothDevice = device;
     // Attempts to connect to remote GATT Server.
     return device.gatt.connect();
   })
@@ -56,8 +58,7 @@ function rxConnect() {
   })
   .then(characteristic => {
     // Set up event listener for when characteristic value changes.
-    characteristic.addEventListener('characteristicvaluechanged',
-                    handleMidiMessageRecieved);
+    characteristic.oncharacteristicvaluechanged = handleMidiMessageReceived;
     console.log('Notifications have been started.')
     printToConsole('Ready to test!');
   })
@@ -80,7 +81,8 @@ function rxDisconnect() {
 }
 
 /** Incoming BLE MIDI */
-function handleMidiMessageRecieved(event) {
+function handleMidiMessageReceived(event) {
+  console.log('Received value: ' + event.target.value);
   const {buffer}  = event.target.value;
   const eventData = new Uint8Array(buffer);
 
@@ -106,7 +108,6 @@ function bleConnected() {
 }
 
 function bleDisconnect() {
-  document.getElementById('ikeys').style.display = 'none';
   document.getElementById('hide').style.display = 'block';
   document.getElementById('ibutton').innerHTML = 'Connect';
   document.getElementById('midi-data').style.height = '10vh';
